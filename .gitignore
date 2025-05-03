@@ -6,3 +6,4 @@ zidane.jpg
 *.avi
 *.jpg
 /__pycache__
+/PeopleDetection/__pycache__
