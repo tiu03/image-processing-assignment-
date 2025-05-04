@@ -1,0 +1,13 @@
+train: D:/image processing/image-processing-assignment-/People Detection.v9i.yolov11/test/images
+val: D:/image processing/image-processing-assignment-/People Detection.v9i.yolov11/valid/images
+test: D:/image processing/image-processing-assignment-/People Detection.v9i.yolov11/test/images
+
+nc: 1
+names: ['person']
+
+roboflow:
+  workspace: leo-ueno
+  project: people-detection-o4rdr
+  version: 9
+  license: Private
+  url: https://universe.roboflow.com/leo-ueno/people-detection-o4rdr/dataset/9

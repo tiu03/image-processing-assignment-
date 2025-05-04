@@ -1,0 +1,13 @@
+hsv_h: 0.015  # Slight hue shift
+hsv_s: 0.7    # Strong saturation change
+hsv_v: 0.4    # Light variation
+degrees: 10.0  # Small rotation
+translate: 0.1
+scale: 0.5
+shear: 2.0
+perspective: 0.0005
+flipud: 0.0   # No vertical flip (unnatural for humans)
+fliplr: 0.5   # 50% horizontal flip
+mosaic: 1.0   # Keep mosaic enabled (good for small data)
+mixup: 0.1    # Slight mixup, don't overuse
+copy_paste: 0.1  # Good for masks, copy objects

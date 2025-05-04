@@ -7,3 +7,7 @@ zidane.jpg
 *.jpg
 /__pycache__
 /PeopleDetection/__pycache__
+/People Detection.v9i.yolov11/test
+/People Detection.v9i.yolov11/train
+/People Detection.v9i.yolov11/valid
+/runs/detect
