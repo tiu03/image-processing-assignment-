@@ -1,6 +1,6 @@
 zidane.jpg
 *.mp4
-*.pt
+
 /yolo11n_ncnn_model
 *.torchscript
 *.avi
@@ -10,4 +10,5 @@ zidane.jpg
 /People Detection.v9i.yolov11/test
 /People Detection.v9i.yolov11/train
 /People Detection.v9i.yolov11/valid
-/runs/detect
+
+/models
