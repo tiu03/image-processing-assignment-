@@ -12,3 +12,4 @@ zidane.jpg
 /People Detection.v9i.yolov11/valid
 
 /models
+*.pt
