@@ -1,0 +1,8 @@
+playsound
+opencv-python
+streamlit
+numpy
+pandas
+matplotlib
+ultralytics
+filterpy

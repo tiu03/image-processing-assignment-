@@ -1,16 +1,16 @@
 task: detect
 mode: train
-model: yolo11l.pt
-data: D:/image processing/image-processing-assignment-/People Detection.v9i.yolov11/data.yaml
-epochs: 50
+model: yolo11s.pt
+data: coco128.yaml
+epochs: 300
 time: null
-patience: 10
+patience: 50
 batch: -1
 imgsz: 640
 save: true
 save_period: -1
 cache: false
-device: null
+device: '0'
 workers: 8
 project: null
 name: train6
@@ -94,9 +94,9 @@ flipud: 0.0
 fliplr: 0.5
 bgr: 0.0
 mosaic: 1.0
-mixup: 0.1
+mixup: 0.0
 cutmix: 0.0
-copy_paste: 0.1
+copy_paste: 0.0
 copy_paste_mode: flip
 auto_augment: randaugment
 erasing: 0.4

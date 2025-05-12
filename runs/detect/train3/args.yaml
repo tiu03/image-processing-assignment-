@@ -1,16 +1,16 @@
 task: detect
 mode: train
-model: yolo11l.pt
-data: People Detection.v9i.yolov11/data.yaml
-epochs: 50
+model: runs/detect/train2/weights/last.pt
+data: D:/image processing/image-processing-assignment-/People Detection.v9i.yolov11/data.yaml
+epochs: 500
 time: null
-patience: 10
+patience: 60
 batch: -1
 imgsz: 640
 save: true
 save_period: -1
 cache: false
-device: null
+device: '0'
 workers: 8
 project: null
 name: train3
