@@ -21,7 +21,7 @@ def detect_people_image(image_path, model_path, people_limit, enable_alert=True)
 
     start_time = time.time()
 
-    results = model.predict(image, classes=[0], conf=0.4)
+    results = model.predict(image, classes=[0], conf=0.45)
 
     end_time = time.time()
     time_taken = end_time - start_time

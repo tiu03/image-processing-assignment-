@@ -7,6 +7,7 @@ import streamlit as st
 import pygame
 import threading
 import time
+from streamlit_image_coordinates import streamlit_image_coordinates
 
 # Save alert frame
 def save_alert_screenshot(frame):
@@ -59,3 +60,34 @@ def play_warning_sound(current_value, threshold, duration=None):
         pygame.mixer.music.stop()
         pygame.mixer.quit()
         st.session_state.is_alert_playing = False
+        
+
+def select_roi_with_clicks(image, key_prefix="roi"):
+    """
+    Allows user to click two points to select a rectangular ROI.
+    Returns the list of 4 polygon points if 2 clicks are made.
+    """
+    st.markdown("### 🖱️ Click on two points to select ROI (Top-Left & Bottom-Right):")
+    coords = streamlit_image_coordinates(image, key=key_prefix)
+
+    if "roi_points" not in st.session_state:
+        st.session_state.roi_points = []
+
+    if coords is not None and len(st.session_state.roi_points) < 2:
+        x, y = int(coords["x"]), int(coords["y"])
+        st.session_state.roi_points.append((x, y))
+
+    if len(st.session_state.roi_points) == 2:
+        pt1 = st.session_state.roi_points[0]
+        pt2 = st.session_state.roi_points[1]
+
+        # Return the 4 corner points of the rectangle
+        zone_points = [
+            pt1,
+            (pt2[0], pt1[1]),
+            pt2,
+            (pt1[0], pt2[1])
+        ]
+        return zone_points
+
+    return None

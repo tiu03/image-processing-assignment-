@@ -8,6 +8,7 @@ import random
 from datetime import datetime
 from streamlit_drawable_canvas import st_canvas
 from PIL import Image
+from streamlit_image_coordinates import streamlit_image_coordinates
 from mode import detect_people_image, detect_people_video, detect_people_camera, detect_live_stream, detect_people_in_zone
 model_path = "models/best.pt"
 
@@ -16,23 +17,28 @@ st.set_page_config(page_title="People Counting System", page_icon="📸")
 st.title("📸 People Counting System")
 st.markdown("<br>", unsafe_allow_html=True)
 
-people_limit = st.sidebar.number_input("⚠️ Set People Limit for Alert", min_value=0, max_value=100, value=5, step=1)
-
-# User can enable/disable alerts
-enable_alert = st.sidebar.checkbox("🔔 Enable Alert When People Exceed Limit", value=True)
-
 # Sidebar: choose input mode
 mode = st.sidebar.selectbox("Choose Input Mode", ["Image", "Zone Image", "Video", "Line Crossing Video", "Camera"])
 
+people_limit = st.sidebar.number_input("⚠️ Set People Limit for Alert", min_value=0, max_value=100, value=5, step=1)
+
+# Only show people limit and alert checkbox if mode supports alerts
+if mode != "Video":
+    enable_alert = st.sidebar.checkbox("🔔 Enable Alert When People Exceed Limit", value=True)
+else:
+    # Assign default values or disable alerts in video mode
+    enable_alert = False
+    
 # Sidebar: choose model
 #model_choice = st.sidebar.selectbox("Choose Detection Model", ["YOLOv8s", "Best"])
 
-# Optional: Clear alert images
-if st.sidebar.button("🧹 Clear All Saved Alert Images"):
-    for file in glob.glob("assets/alerts/*.jpg"):
-        os.remove(file)
-    st.sidebar.success("All alert images deleted.")
-    st.rerun()
+# Only show "Clear Alert Images" button in Camera mode
+if mode == "Camera":
+    if st.sidebar.button("🧹 Clear All Saved Alert Images"):
+        for file in glob.glob("assets/alerts/*.jpg"):
+            os.remove(file)
+        st.sidebar.success("All alert images deleted.")
+        st.rerun()
 
 # Fun fact display
 fun_facts = [
@@ -97,63 +103,60 @@ if mode == "Image":
 # Zone image detection #
 ########################
 elif mode == "Zone Image":
-    st.subheader("🖼️ Upload an Image and Select Zone for People Detection")
+    st.subheader("🖼️ Upload an Image and Select ROI (Rectangle) for People Detection")
     uploaded_file = st.file_uploader("Upload an Image", type=['jpg', 'jpeg', 'png'])
 
     if uploaded_file is not None:
         save_path = os.path.join('assets/test', uploaded_file.name)
         with open(save_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
-            
-        st.session_state.is_alert_playing = False
-        processing_text = st.empty()
 
-        # Load and convert image
+        # Reset alert and ROI state
+        st.session_state.is_alert_playing = False
+        if "roi_points" not in st.session_state:
+            st.session_state.roi_points = []
+
+        # Load and display image
         image = cv2.imread(save_path)
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         pil_image = Image.fromarray(image_rgb)
 
-        st.markdown("### ✏️ Draw a polygon to define your zone:")
-        canvas_result = st_canvas(
-            fill_color="rgba(255, 165, 0, 0.3)",
-            stroke_width=2,
-            stroke_color="#ffaa00",
-            background_image=pil_image,
-            update_streamlit=True,
-            height=pil_image.height,
-            width=pil_image.width,
-            drawing_mode="polygon",
-            key="canvas_zone",
-        )
+        st.markdown("### 🖱️ Click on two points (Top-left and Bottom-right) to select ROI:")
+        coords = streamlit_image_coordinates(pil_image, key="roi")
 
-        if canvas_result.json_data is not None and canvas_result.json_data["objects"]:
-            objects = canvas_result.json_data["objects"]
-            zone_points = []
+        if coords is not None and len(st.session_state.roi_points) < 2:
+            st.session_state.roi_points.append((int(coords["x"]), int(coords["y"])))
 
-            for obj in objects:
-                if obj["type"] == "path" and "path" in obj:
-                    for p in obj["path"]:
-                        if p[0] in ["L", "M"]:
-                            x, y = int(p[1]), int(p[2])
-                            zone_points.append((x, y))
+        if len(st.session_state.roi_points) == 2:
+            pt1 = st.session_state.roi_points[0]
+            pt2 = st.session_state.roi_points[1]
 
-            if len(zone_points) >= 3:
-                st.success("✅ Zone selected. Ready to process!")
-                if st.button("🚀 Run Zone Detection"):
-                    result_img, zone_count, time_taken = detect_people_in_zone(save_path, model_path, zone_points, people_limit, enable_alert)
-                    result_path = os.path.join(model_result_dir, f"zone_{uploaded_file.name}")
-                    cv2.imwrite(result_path, result_img)
+            # Create rectangular zone points (clockwise)
+            zone_points = [pt1, (pt2[0], pt1[1]), pt2, (pt1[0], pt2[1])]
 
-                    st.image(result_img, channels="BGR")
-                    st.success(f"✅ People in Zone: {zone_count}")
-                    st.success(f"✅ Time Taken: {time_taken:.2f}s")
-                    if zone_count > people_limit:
-                        st.error(f"🚨 ALERT: {zone_count} people detected in zone! Limit is {people_limit}.")
-                    st.download_button("Download Result Image", open(result_path, "rb").read(), file_name=f"zone_{uploaded_file.name}")
-            else:
-                st.warning("⚠️ Please draw a closed polygon with at least 3 points.")
+            st.success("✅ ROI selected. Ready to process!")
+            if st.button("🚀 Run Zone Detection"):
+                result_img, zone_count, time_taken = detect_people_in_zone(
+                    save_path, model_path, zone_points, people_limit, enable_alert
+                )
+                result_path = os.path.join(model_result_dir, f"zone_{uploaded_file.name}")
+                cv2.imwrite(result_path, result_img)
 
+                st.image(result_img, channels="BGR")
+                st.success(f"✅ People in Zone: {zone_count}")
+                st.success(f"✅ Time Taken: {time_taken:.2f}s")
+                if zone_count > people_limit:
+                    st.error(f"🚨 ALERT: {zone_count} people detected in zone! Limit is {people_limit}.")
+                st.download_button("Download Result Image", open(result_path, "rb").read(), file_name=f"zone_{uploaded_file.name}")
 
+                # Reset ROI points for next run
+                st.session_state.roi_points = []
+
+        elif len(st.session_state.roi_points) > 2:
+            st.session_state.roi_points = []
+            st.warning("⚠️ Only 2 points allowed. ROI selection reset.")
+            
+            
 ###################
 # Video detection #
 ###################
